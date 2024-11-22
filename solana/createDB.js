@@ -23,7 +23,7 @@ const SQLITEDB = process.env.SQLITEDB;
 	const sql = `CREATE TABLE wallet (
 	        owner TEXT NOT NULL PRIMARY KEY,
 	        publicKey TEXT NOT NULL,
-	        privateKey TEXT NOT NULL,
+	        secretKey TEXT NOT NULL,
 	        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	)`
         db.run(sql, function (err) {
