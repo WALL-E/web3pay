@@ -17,8 +17,8 @@ CREATE TABLE wallet (
 
 ```
 INSERT INTO wallet (public_key, private_key, owner) VALUES
-('0x123abc...', '0xprivate456...', 'Alice'),
-('0x654mno...', '0xprivate654...', 'Eve');
+('0x123abc', '0xprivate456', 'Alice'),
+('0x654mno', '0xprivate654', 'Eve');
 ```
 
 ## SQLite 基本命令
