@@ -7,16 +7,16 @@
 ```
 CREATE TABLE wallet (
     owner TEXT NOT NULL PRIMARY KEY,
-    public_key TEXT NOT NULL,
-    private_key TEXT NOT NULL,
-    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    publicKey TEXT NOT NULL,
+    privateKey TEXT NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
 ## 测试数据
 
 ```
-INSERT INTO wallet (public_key, private_key, owner) VALUES
+INSERT INTO wallet (publicKey, privateKey, owner) VALUES
 ('0x123abc', '0xprivate456', 'Alice'),
 ('0x654mno', '0xprivate654', 'Eve');
 ```
