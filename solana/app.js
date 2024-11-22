@@ -17,6 +17,10 @@ const crypto = require('crypto')
 const web3 = require("@solana/web3.js");
 const tweetnacl = require("tweetnacl");
 const bs58 = __importDefault(require("bs58"));
+const sqlite3 = require('sqlite3').verbose()
+const fs = require('fs').promises;
+const path = require('path');
+
 
 const app = express()
 const port = process.env.PORT || 3000;
@@ -26,6 +30,7 @@ const KEY = process.env.KEY;
 const IV = process.env.IV;
 const MINBALANCE = process.env.MINBALANCE;
 const CLUSTER = process.env.CLUSTER;
+const SQLITEDB = process.env.SQLITEDB;
 
 app.use(express.json());
 
@@ -57,7 +62,47 @@ async function getBalance(address) {
     return balance;
 }
 
-function findPublicKey() {
+function findPublicKey(address) {
+    return new Promise((resolve, reject) => {
+    var db = new sqlite3.Database(
+        SQLITEDB,
+        sqlite3.OPEN_READWRITE,
+        function (err) {
+            if (err) {
+    	        return console.log(err.message)
+            }
+            console.log('connect database successfully')
+        }
+    )
+
+    var publicKey = "0x1234";
+    const sql = `SELECT publicKey FROM wallet where owner ="${address}"`;
+    db.get(sql, (error, row, publicKey) => {
+	if (error) {
+            db.close();
+            reject(error);
+            return;
+        }
+
+        console.log(row);
+        if (row) {
+	    resolve(row.publicKey);
+	} else {
+            const keys = web3.Keypair.generate();
+	    const publicKey = keys.publicKey.toBase58();
+	    db.run('INSERT INTO wallet(owner, publicKey, secretKey) VALUES(?, ?, ?)', 
+		[address, keys.publicKey.toBase58(), keys.secretKey.toString()], function (err) {
+		db.close();
+                if (err) {
+		    reject(err);
+    	            return console.log('insert data error: ', err.message)
+                }
+                console.log('insert data: ', this)
+	        resolve(publicKey);
+            })
+	}
+    });
+    });
 }
 
 app.get('/', (req, res) => {
@@ -75,7 +120,7 @@ app.post('/getAccount', function (req, res) {
     if (!address) {
         res.status(400).json({ error: "parms {address} must be set" })
     } else {
-	const publicKey = findPublicKey();
+	const publicKey = findPublicKey(address);
         res.json({ result: publicKey })
     }
 

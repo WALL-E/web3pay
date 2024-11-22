@@ -18,6 +18,7 @@
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "tsc": "^2.0.4"
   }
 }
