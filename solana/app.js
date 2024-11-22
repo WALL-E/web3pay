@@ -57,6 +57,9 @@ async function getBalance(address) {
     return balance;
 }
 
+function findPublicKey() {
+}
+
 app.get('/', (req, res) => {
     res.json({ message: "Web3 User Pay Service" })
     return res.end();
@@ -67,26 +70,19 @@ app.get('/health', (req, res) => {
     return res.end();
 })
 
-app.post('/getUserId', function (req, res) {
+app.post('/getAccount', function (req, res) {
     const address = req.body.address;
     if (!address) {
         res.status(400).json({ error: "parms {address} must be set" })
     } else {
-        const hash = sha256(address + SLAT)
-        //
-        // Maximum number of users supported,
-        // The probability of collision is extremely small
-        //
-        // C(36,16) = 7,307,872,110
-        //
-        const uid = hash.substring(0, 16)
-        res.json({ result: uid })
+	const publicKey = findPublicKey();
+        res.json({ result: publicKey })
     }
 
     return res.end();
 })
 
-app.post('/getUserBalance', async function (req, res) {
+app.post('/getBalance', async function (req, res) {
     const address = req.body.address;
     if (!address) {
         res.status(400).json({ error: "parms { address } must be set" })
