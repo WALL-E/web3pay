@@ -17,9 +17,6 @@ const crypto = require('crypto')
 const web3 = require("@solana/web3.js");
 const tweetnacl = require("tweetnacl");
 const bs58 = __importDefault(require("bs58"));
-const sqlite3 = require('sqlite3').verbose()
-const fs = require('fs').promises;
-const path = require('path');
 
 
 const app = express()
@@ -63,46 +60,7 @@ async function getBalance(address) {
 }
 
 function findPublicKey(address) {
-    return new Promise((resolve, reject) => {
-    var db = new sqlite3.Database(
-        SQLITEDB,
-        sqlite3.OPEN_READWRITE,
-        function (err) {
-            if (err) {
-    	        return console.log(err.message)
-            }
-            console.log('connect database successfully')
-        }
-    )
-
-    var publicKey = "0x1234";
-    const sql = `SELECT publicKey FROM wallet where owner ="${address}"`;
-    db.get(sql, (error, row, publicKey) => {
-	if (error) {
-            db.close();
-            reject(error);
-            return;
-        }
-
-        console.log(row);
-        if (row) {
-	    resolve(row.publicKey);
-	} else {
-            const keys = web3.Keypair.generate();
-	    const publicKey = keys.publicKey.toBase58();
-	    db.run('INSERT INTO wallet(owner, publicKey, secretKey) VALUES(?, ?, ?)', 
-		[address, keys.publicKey.toBase58(), keys.secretKey.toString()], function (err) {
-		db.close();
-                if (err) {
-		    reject(err);
-    	            return console.log('insert data error: ', err.message)
-                }
-                console.log('insert data: ', this)
-	        resolve(publicKey);
-            })
-	}
-    });
-    });
+    return "0x1234";
 }
 
 app.get('/', (req, res) => {
