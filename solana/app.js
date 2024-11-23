@@ -17,6 +17,7 @@ const crypto = require('crypto')
 const web3 = require("@solana/web3.js");
 const tweetnacl = require("tweetnacl");
 const bs58 = __importDefault(require("bs58"));
+const axios = require('axios');
 
 
 const app = express()
@@ -59,8 +60,33 @@ async function getBalance(address) {
     return balance;
 }
 
-function findPublicKey(address) {
-    return "0x1234";
+async function findPublicKey(req, res, address) {
+        const getResponse = await axios.get('http://127.0.0.1:5000/wallet' + `?owner=${address}`);
+	if (getResponse.status == 200) {
+	    return getResponse.data.publicKey;
+	}
+
+	const keypair = web3.Keypair.generate();
+	const publicKey = keypair.publicKey.toBase58();
+	const secretKey = keypair.secretKey.toString()
+        const postResponse = await axios.post('http://127.0.0.1:5000/wallet', {
+            owner: address,
+	    publicKey: publicKey,
+	    secretKey: secretKey
+        }, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+	if (postResponse.status >= 200 && postResponse.status < 300) {
+            return publicKey;
+	} else {
+	    res.status(postResponse.status).json({
+		 result: response.data
+            });
+            return res.end();
+	}
 }
 
 app.get('/', (req, res) => {
@@ -73,12 +99,12 @@ app.get('/health', (req, res) => {
     return res.end();
 })
 
-app.post('/getAccount', function (req, res) {
+app.post('/getAccount', async function (req, res) {
     const address = req.body.address;
     if (!address) {
         res.status(400).json({ error: "parms {address} must be set" })
     } else {
-	const publicKey = findPublicKey(address);
+	const publicKey = await findPublicKey(req, res, address);
         res.json({ result: publicKey })
     }
 
