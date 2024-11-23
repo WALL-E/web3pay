@@ -30,19 +30,16 @@ Web3 User Pay Service
         "result":5589950000
     }
    ```
-3. /checkUserToken
+3. /getRefund
    ```
    curl -X 'POST' \
-    'http://127.0.0.1:3000/checkUserToken' \
+    'http://127.0.0.1:3000/getRefund' \
     -H 'Content-Type: application/json' \
     -d '{
-      "token": "bec012cc4eeefe921fb5e944d851efa19a768638d1d6ec6620ed1a07f4067b026b773f616226fb3822618292597c27b6d6bcf8e0c7d542f5e8e288aec067c448"
+      "address": "7iCzEsN1xrV9gZoWMvUaWKhAhy1Cqm9iAeVAmJVThCqV"
     }'
 
-   {
-     "result":{
-       "address":"7iCzEsN1xrV9gZoWMvUaWKhAhy1Cqm9iAeVAmJVThCqV",
-       "uid":"c9fe7bf01a33e35c"
-     }
-   }
+    {
+        "result":"41rAZAP5JAVRbUqGKqbvCYLQob18sgZhVrEaRSxaqGGaW9FtS4oDX9c7Aoyj7yMs8Xw3pkWDtgEmhJ8vAjLk4XHb"
+    }
    ```

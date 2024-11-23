@@ -60,6 +60,38 @@ async function getBalance(address) {
     return balance;
 }
 
+async function getRefund(wallet) {
+    const secretKey = wallet.secretKey.split(',').map(num => parseInt(num));
+    const keypair = web3.Keypair.fromSecretKey(Uint8Array.from(secretKey))
+
+    const connection = new web3.Connection(CLUSTER, 'confirmed');
+    const fromPubkey = keypair.publicKey;
+    const toPubkey = new web3.PublicKey(wallet.owner);
+
+    const balance = await connection.getBalance(fromPubkey);
+    const fees = 5000;
+    if (balance <= fees) {
+        throw new Error('Insufficient balance to cover transaction costs');
+    }
+
+    const transferAmount = balance - fees;
+    const transaction = new web3.Transaction().add(
+        web3.SystemProgram.transfer({
+            fromPubkey,
+            toPubkey,
+            lamports: transferAmount
+        })
+    );
+
+    const signature = await web3.sendAndConfirmTransaction(
+        connection,
+        transaction,
+        [keypair]
+    );
+
+    return signature;
+}
+
 async function findPublicKey(address) {
     try {
         const getResponse = await axios.get('http://127.0.0.1:5000/wallet' + `?owner=${address}`);
@@ -134,6 +166,27 @@ app.post('/getBalance', async function (req, res) {
         return res.end();
     }
 })
+
+app.post('/getRefund', async function (req, res) {
+    const address = req.body.address;
+    if (!address) {
+        res.status(400).json({ error: "parms { address } must be set" })
+        return res.end();
+    }
+
+    try {
+        const getResponse = await axios.get('http://127.0.0.1:5000/wallet' + `?owner=${address}`);
+        const wallet =  getResponse.data;
+	const signature = await getRefund(wallet)
+        res.json({ result: signature})
+        return res.end();
+    } catch (error) {
+	console.log("[/getRefund] get refund failed:", error);
+        res.status(500).json({ error: error.message })
+        return res.end();
+    }
+})
+ 
  
 app.post('/getUserToken', async function (req, res) {
     const address = req.body.address;
