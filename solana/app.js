@@ -60,12 +60,15 @@ async function getBalance(address) {
     return balance;
 }
 
-async function findPublicKey(req, res, address) {
+async function findPublicKey(address) {
+    try {
         const getResponse = await axios.get('http://127.0.0.1:5000/wallet' + `?owner=${address}`);
-	if (getResponse.status == 200) {
-	    return getResponse.data.publicKey;
-	}
+        return getResponse.data.publicKey;
+    } catch (error) {
+	console.log("[error] get wallet:", error.response.status);
+    }
 
+    try {
 	const keypair = web3.Keypair.generate();
 	const publicKey = keypair.publicKey.toBase58();
 	const secretKey = keypair.secretKey.toString()
@@ -79,14 +82,11 @@ async function findPublicKey(req, res, address) {
             }
         });
 
-	if (postResponse.status >= 200 && postResponse.status < 300) {
-            return publicKey;
-	} else {
-	    res.status(postResponse.status).json({
-		 result: response.data
-            });
-            return res.end();
-	}
+        return publicKey;
+    } catch (error) {
+	console.log("[error] post wallet failed");
+	return null;
+    }
 }
 
 app.get('/', (req, res) => {
@@ -104,8 +104,12 @@ app.post('/getAccount', async function (req, res) {
     if (!address) {
         res.status(400).json({ error: "parms {address} must be set" })
     } else {
-	const publicKey = await findPublicKey(req, res, address);
-        res.json({ result: publicKey })
+	const publicKey = await findPublicKey(address);
+	if (publicKey === "") {
+            res.status(400).json({ error: "something broke!" })
+	} else {
+            res.json({ result: publicKey })
+        }
     }
 
     return res.end();
