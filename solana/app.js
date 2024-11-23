@@ -65,7 +65,7 @@ async function findPublicKey(address) {
         const getResponse = await axios.get('http://127.0.0.1:5000/wallet' + `?owner=${address}`);
         return getResponse.data.publicKey;
     } catch (error) {
-	console.log("[error] get wallet:", error.response.status);
+	console.log("[error] get wallet failed");
     }
 
     try {
@@ -105,8 +105,8 @@ app.post('/getAccount', async function (req, res) {
         res.status(400).json({ error: "parms {address} must be set" })
     } else {
 	const publicKey = await findPublicKey(address);
-	if (publicKey === "") {
-            res.status(400).json({ error: "something broke!" })
+	if (publicKey === null) {
+            res.status(500).json({ error: "something broke!" })
 	} else {
             res.json({ result: publicKey })
         }
@@ -122,9 +122,17 @@ app.post('/getBalance', async function (req, res) {
         return res.end();
     }
 
-    const balance = await getBalance(address)
-    res.json({ result: balance })
-    return res.end();
+    try {
+        const getResponse = await axios.get('http://127.0.0.1:5000/wallet' + `?owner=${address}`);
+        const publicKey =  getResponse.data.publicKey;
+        const balance = await getBalance(publicKey)
+        res.json({ result: balance })
+        return res.end();
+    } catch (error) {
+	console.log("[error] get wallet failed");
+        res.status(500).json({ error: "something broke!" })
+        return res.end();
+    }
 })
  
 app.post('/getUserToken', async function (req, res) {
