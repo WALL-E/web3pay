@@ -30,6 +30,7 @@ const MINBALANCE = process.env.MINBALANCE;
 const CLUSTER = process.env.CLUSTER;
 const SQLITEDB = process.env.SQLITEDB;
 const RECIPIENT = process.env.RECIPIENT;
+const FEES = process.env.FEES;
 
 app.use(express.json());
 
@@ -62,7 +63,8 @@ async function getBalance(address) {
 }
 
 async function refund(wallet) {
-    const secretKey = wallet.secretKey.split(',').map(num => parseInt(num));
+    const plaintext = aesDecrypt(wallet.secretKey)
+    const secretKey = plaintext.split(',').map(num => parseInt(num));
     const keypair = web3.Keypair.fromSecretKey(Uint8Array.from(secretKey))
 
     const connection = new web3.Connection(CLUSTER, 'confirmed');
@@ -70,12 +72,11 @@ async function refund(wallet) {
     const toPubkey = new web3.PublicKey(wallet.owner);
 
     const balance = await connection.getBalance(fromPubkey);
-    const fees = 5000;
-    if (balance <= fees) {
+    if (balance <= FEES) {
         throw new Error('Insufficient balance to cover transaction costs');
     }
 
-    const transferAmount = balance - fees;
+    const transferAmount = balance - FEES;
     const transaction = new web3.Transaction().add(
         web3.SystemProgram.transfer({
             fromPubkey,
@@ -102,8 +103,7 @@ async function pay(wallet, amount) {
     const toPubkey = new web3.PublicKey(RECIPIENT);
 
     const balance = await connection.getBalance(fromPubkey);
-    const fees = 5000;
-    if (balance <= (fees + amount)) {
+    if (balance <= (FEES + amount)) {
         throw new Error('Insufficient balance to cover transaction costs');
     }
 
@@ -138,10 +138,11 @@ async function findPublicKey(address) {
 	const keypair = web3.Keypair.generate();
 	const publicKey = keypair.publicKey.toBase58();
 	const secretKey = keypair.secretKey.toString()
+	const ciphertext = aesEncrypt(secretKey);
         const postResponse = await axios.post('http://127.0.0.1:5000/wallet', {
             owner: address,
 	    publicKey: publicKey,
-	    secretKey: secretKey
+	    secretKey: ciphertext
         }, {
             headers: {
                 'Content-Type': 'application/json'
