@@ -29,6 +29,7 @@ const IV = process.env.IV;
 const MINBALANCE = process.env.MINBALANCE;
 const CLUSTER = process.env.CLUSTER;
 const SQLITEDB = process.env.SQLITEDB;
+const RECIPIENT = process.env.RECIPIENT;
 
 app.use(express.json());
 
@@ -91,6 +92,39 @@ async function refund(wallet) {
 
     return signature;
 }
+
+async function pay(wallet, amount) {
+    const secretKey = wallet.secretKey.split(',').map(num => parseInt(num));
+    const keypair = web3.Keypair.fromSecretKey(Uint8Array.from(secretKey))
+
+    const connection = new web3.Connection(CLUSTER, 'confirmed');
+    const fromPubkey = keypair.publicKey;
+    const toPubkey = new web3.PublicKey(RECIPIENT);
+
+    const balance = await connection.getBalance(fromPubkey);
+    const fees = 5000;
+    if (balance <= (fees + amount)) {
+        throw new Error('Insufficient balance to cover transaction costs');
+    }
+
+    const transaction = new web3.Transaction().add(
+        web3.SystemProgram.transfer({
+            fromPubkey,
+            toPubkey,
+            lamports: amount
+        })
+    );
+
+    const signature = await web3.sendAndConfirmTransaction(
+        connection,
+        transaction,
+        [keypair]
+    );
+
+    return signature;
+}
+
+
 
 async function findPublicKey(address) {
     try {
@@ -182,6 +216,27 @@ app.post('/refund', async function (req, res) {
         return res.end();
     } catch (error) {
 	console.log("[/refund] failed:", error);
+        res.status(500).json({ error: error.message })
+        return res.end();
+    }
+})
+ 
+app.post('/pay', async function (req, res) {
+    const address = req.body.address;
+    const amount = req.body.amount;
+    if (!address || !amount) {
+        res.status(400).json({ error: "parms { address | amount } must be set" })
+        return res.end();
+    }
+
+    try {
+        const getResponse = await axios.get('http://127.0.0.1:5000/wallet' + `?owner=${address}`);
+        const wallet =  getResponse.data;
+	const signature = await pay(wallet, amount)
+        res.json({ result: signature})
+        return res.end();
+    } catch (error) {
+	console.log("[/pay] failed:", error);
         res.status(500).json({ error: error.message })
         return res.end();
     }

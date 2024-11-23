@@ -43,3 +43,17 @@ Web3 User Pay Service
         "result":"41rAZAP5JAVRbUqGKqbvCYLQob18sgZhVrEaRSxaqGGaW9FtS4oDX9c7Aoyj7yMs8Xw3pkWDtgEmhJ8vAjLk4XHb"
     }
    ```
+4. /pay
+   ```
+   curl -X 'POST' \
+    'http://127.0.0.1:3000/refund' \
+    -H 'Content-Type: application/json' \
+    -d '{
+      "address": "7iCzEsN1xrV9gZoWMvUaWKhAhy1Cqm9iAeVAmJVThCqV",
+      "amount": 5000
+    }'
+
+    {
+        "result":"41rAZAP5JAVRbUqGKqbvCYLQob18sgZhVrEaRSxaqGGaW9FtS4oDX9c7Aoyj7yMs8Xw3pkWDtgEmhJ8vAjLk4XHb"
+    }
+   ```
