@@ -39,10 +39,10 @@ graph LR;
         "result":5589950000
     }
    ```
-3. /refund
+3. /withdraw
    ```
    curl -X 'POST' \
-    'http://127.0.0.1:3000/refund' \
+    'http://127.0.0.1:3000/withdraw' \
     -H 'Content-Type: application/json' \
     -d '{
       "address": "7iCzEsN1xrV9gZoWMvUaWKhAhy1Cqm9iAeVAmJVThCqV"
@@ -55,7 +55,7 @@ graph LR;
 4. /pay
    ```
    curl -X 'POST' \
-    'http://127.0.0.1:3000/refund' \
+    'http://127.0.0.1:3000/withdraw' \
     -H 'Content-Type: application/json' \
     -d '{
       "address": "7iCzEsN1xrV9gZoWMvUaWKhAhy1Cqm9iAeVAmJVThCqV",

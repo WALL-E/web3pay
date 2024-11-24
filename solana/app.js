@@ -62,7 +62,7 @@ async function getBalance(address) {
     return balance;
 }
 
-async function refund(wallet) {
+async function withdraw(wallet) {
     const plaintext = aesDecrypt(wallet.secretKey)
     const secretKey = plaintext.split(',').map(num => parseInt(num));
     const keypair = web3.Keypair.fromSecretKey(Uint8Array.from(secretKey))
@@ -203,7 +203,7 @@ app.post('/getBalance', async function (req, res) {
     }
 })
 
-app.post('/refund', async function (req, res) {
+app.post('/withdraw', async function (req, res) {
     const address = req.body.address;
     if (!address) {
         res.status(400).json({ error: "parms { address } must be set" })
@@ -213,11 +213,11 @@ app.post('/refund', async function (req, res) {
     try {
         const getResponse = await axios.get('http://127.0.0.1:5000/wallet' + `?owner=${address}`);
         const wallet =  getResponse.data;
-	const signature = await refund(wallet)
+	const signature = await withdraw(wallet)
         res.json({ result: signature})
         return res.end();
     } catch (error) {
-	console.log("[/refund] failed:", error);
+	console.log("[/withdraw] failed:", error);
         res.status(500).json({ error: error.message })
         return res.end();
     }
