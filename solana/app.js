@@ -95,7 +95,8 @@ async function refund(wallet) {
 }
 
 async function pay(wallet, amount) {
-    const secretKey = wallet.secretKey.split(',').map(num => parseInt(num));
+    const plaintext = aesDecrypt(wallet.secretKey)
+    const secretKey = plaintext.split(',').map(num => parseInt(num));
     const keypair = web3.Keypair.fromSecretKey(Uint8Array.from(secretKey))
 
     const connection = new web3.Connection(CLUSTER, 'confirmed');
