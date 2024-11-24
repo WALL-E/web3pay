@@ -4,9 +4,9 @@ Web3 User Pay Service
 
 ```mermaid
 graph LR;
-    A((UserA-Wallet))-.->|Prepaid|T[[Trusted-Wallet]];
+    A((UserA-Wallet))-.->|Deposit|T[[Trusted-Wallet]];
     A((UserA-Wallet))--->|Pay|T[[Trusted-Wallet]];
-    T[[Trusted-Wallet]]-.->|Refund|A((UserA-Wallet));
+    T[[Trusted-Wallet]]-.->|Withdraw|A((UserA-Wallet));
     T[[Trusted-Wallet]]-->|Pay-90%|P((Platform-Wallet));
     T[[Trusted-Wallet]]-->|Pay-10%|B((UserB-Wallet));
 ```
