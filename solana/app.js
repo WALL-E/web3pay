@@ -31,6 +31,7 @@ const CLUSTER = process.env.CLUSTER;
 const SQLITEDB = process.env.SQLITEDB;
 const RECIPIENT = process.env.RECIPIENT;
 const FEES = process.env.FEES;
+const COMMISSION = process.env.COMMISSION;
 
 app.use(express.json());
 
@@ -94,25 +95,40 @@ async function withdraw(wallet) {
     return signature;
 }
 
-async function pay(wallet, amount) {
+async function pay(wallet, to, amount) {
+    if (amount < FEES) {
+        throw new Error(`Transfer amount must be greater than ${FEES} Lamport`);
+    }
+
     const plaintext = aesDecrypt(wallet.secretKey)
     const secretKey = plaintext.split(',').map(num => parseInt(num));
     const keypair = web3.Keypair.fromSecretKey(Uint8Array.from(secretKey))
 
     const connection = new web3.Connection(CLUSTER, 'confirmed');
     const fromPubkey = keypair.publicKey;
-    const toPubkey = new web3.PublicKey(RECIPIENT);
+    const toPubkey = new web3.PublicKey(to);
+    console.log("XXX 1", toPubkey);
+    const recipientPubkey = new web3.PublicKey(RECIPIENT);
+    console.log("XXX 2", recipientPubkey);
 
     const balance = await connection.getBalance(fromPubkey);
-    if (balance <= (FEES + amount)) {
+    if (balance < (FEES + amount)) {
         throw new Error('Insufficient balance to cover transaction costs');
     }
 
-    const transaction = new web3.Transaction().add(
+    const transaction = new web3.Transaction()
+    transaction.add(
         web3.SystemProgram.transfer({
             fromPubkey,
             toPubkey,
-            lamports: amount
+            lamports: amount*(1-COMMISSION)
+        })
+    );
+    transaction.add(
+        web3.SystemProgram.transfer({
+            fromPubkey,
+            toPubkey,
+            lamports: amount*COMMISSION
         })
     );
 
@@ -224,17 +240,18 @@ app.post('/withdraw', async function (req, res) {
 })
  
 app.post('/pay', async function (req, res) {
-    const address = req.body.address;
+    const from = req.body.from;
+    const to = req.body.to;
     const amount = req.body.amount;
-    if (!address || !amount) {
-        res.status(400).json({ error: "parms { address | amount } must be set" })
+    if (!from || !to || !amount) {
+        res.status(400).json({ error: "parms { from | to | amount } must be set" })
         return res.end();
     }
 
     try {
-        const getResponse = await axios.get('http://127.0.0.1:5000/wallet' + `?owner=${address}`);
-        const wallet =  getResponse.data;
-	const signature = await pay(wallet, amount)
+        const getResponse = await axios.get('http://127.0.0.1:5000/wallet' + `?owner=${from}`);
+        const wallet = getResponse.data;
+	const signature = await pay(wallet, to, amount)
         res.json({ result: signature})
         return res.end();
     } catch (error) {
