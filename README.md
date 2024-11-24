@@ -2,6 +2,14 @@
 
 Web3 User Pay Service
 
+```mermaid
+graph LR;
+    UserA-Wallet--->|Prepaid|Trusted-Wallet;
+    Trusted-Wallet--->|Refund|UserA-Wallet;
+    Trusted-Wallet-->|Pay-90%|Platform-Wallet;
+    Trusted-Wallet-->|Pay-10%|UserB-Wallet;
+```
+
 ## Pay Biz
 
 1. /getAccount
